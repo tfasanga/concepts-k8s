@@ -13,8 +13,22 @@ git clone https://github.com/tfasanga/learning-k8s.git
 cd learning-k8s/minimal-go-manual
 ```
 
+Run minikube with socket_vmnet network:
+
 ```shell
-minikube start
+brew install qemu
+brew install socket_vmnet
+brew tap homebrew/services
+HOMEBREW=$(which brew) && sudo ${HOMEBREW} services start socket_vmnet
+```
+
+```shell
+minikube stop
+minikube delete
+```
+
+```shell
+minikube start --driver qemu --network socket_vmnet
 ```
 
 Build Docker image:
@@ -33,6 +47,9 @@ Load docker image to minikube:
 
 ```shell
 podman save my-go-api-helm:1.0 -o my-go-api-helm-image.tar
+```
+
+```shell
 minikube image load my-go-api-helm-image.tar
 ```
 
@@ -49,26 +66,50 @@ kubectl logs -l app=go-api-label -f
 ```shell
 export POD_NAME=$(kubectl get pods -l "app=go-api-label" -o jsonpath="{.items[0].metadata.name}")
 echo "$POD_NAME"
-kubectl port-forward $POD_NAME 9000:9000
+kubectl port-forward $POD_NAME 8080:8080
 ```
 
 ```shell
-helm install my-go-api-chart helm --values env/dev-values.yaml
+curl http://127.0.0.1:8080
 ```
+
+```shell
+helm install go-api helm --values env/dev-values.yaml
+```
+
+```shell
+minikube ssh
+```
+inside minikube ssh;
+
+```shell
+curl http://10.0.2.15:30090
+curl http://127.0.0.1:30090
+```
+
+Show pods:
 
 ```shell
 kubectl get pods
 ```
 
+Show service:
+
 ```shell
-kubectl describe service
+kubectl describe service go-api-service
 kubectl get service
+```
+
+Get the service URL from host:
+
+```shell
+minikube service go-api-service --url
 ```
 
 Uninstall Helm chart:
 
 ```shell
-helm uninstall my-go-api-chart
+helm uninstall go-api
 ```
 
 Remove image from minikube:
@@ -82,4 +123,3 @@ Remove image from podman:
 ```shell
 podman image rm my-go-api-helm:1.0
 ```
-
