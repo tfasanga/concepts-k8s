@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-content-configmap
+  namespace: default
+data:
+  content.txt: |
+    Hi! I got deployed in {{ .Values.env.name }} Environment using Helm Chart
