@@ -22,13 +22,26 @@ brew tap homebrew/services
 HOMEBREW=$(which brew) && sudo ${HOMEBREW} services start socket_vmnet
 ```
 
+Minikube:
+
 ```shell
 minikube stop
 minikube delete
 ```
 
 ```shell
+minikube start --network socket_vmnet
+```
+```shell
 minikube start --driver qemu --network socket_vmnet
+```
+
+Kind:
+
+```shell
+brew install kind
+kind create cluster
+kubectx kind-kind
 ```
 
 Build Docker image:
@@ -53,10 +66,14 @@ podman save my-go-api-helm:1.0 -o my-go-api-helm-image.tar
 minikube image load my-go-api-helm-image.tar
 ```
 
+```shell
+kind load image-archive my-go-api-helm-image.tar
+```
+
 Install Helm chart:
 
 ```shell
-helm install my-go-api-chart helm --values helm/values.yaml
+helm install go-api helm --values helm/values.yaml
 ```
 
 ```shell
