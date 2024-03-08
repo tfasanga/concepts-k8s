@@ -11,4 +11,4 @@ service:
   nodePort: ""
 
 env:
-  name: dev
+  name: base

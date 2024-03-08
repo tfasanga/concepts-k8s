@@ -23,7 +23,7 @@ spec:
               containerPort: 8080
               protocol: TCP
           volumeMounts:
-            - mountPath: /content
+            - mountPath: /app/content
               name: go-api-content-file
       volumes:
         - name: go-api-content-file

@@ -19,6 +19,9 @@ minikube delete
 ```shell
 minikube start --network socket_vmnet
 ```
+
+or
+
 ```shell
 minikube start --driver qemu --network socket_vmnet
 ```
@@ -40,19 +43,11 @@ kubectx kind-kind
 
 # Build
 
-Build Docker image:
+Build and Save Docker image:
 
 ```shell
 podman build -t my-go-api-helm:1.0 .
-```
-```shell
 podman save my-go-api-helm:1.0 -o my-go-api-helm-image.tar
-```
-
-Test run in Podman:
-
-```shell
-podman run --rm -p 8080:8080 --name my-go-api-helm my-go-api-helm:1.0 
 ```
 
 # Load docker image to Minikube
@@ -67,47 +62,38 @@ minikube image load my-go-api-helm-image.tar
 kind load image-archive my-go-api-helm-image.tar
 ```
 
-# Install in Kubernetes
+# Test run in Podman
 
 ```shell
-helm install go-api helm --values helm/values.yaml
+podman run --rm -p 8080:8080 --name my-go-api-helm my-go-api-helm:1.0 
 ```
 
-Logs:
+## Remove image from minikube
+
+```shell
+minikube image rm docker.io/localhost/my-go-api-helm:1.0
+```
+
+## Remove image from podman
+
+```shell
+podman image rm my-go-api-helm:1.0
+```
+
+# Base
+
+[TEST_BASE.md](TEST_BASE.md)
+
+# Dev Overlay
+
+[TEST_OVERLAY_DEV.md](TEST_OVERLAY_DEV.md)
+
+# Notes
+
+Show logs:
 
 ```shell
 kubectl logs -l app=go-api-label -f
-```
-
-Port forward:
-
-```shell
-export POD_NAME=$(kubectl get pods -l "app=go-api-label" -o jsonpath="{.items[0].metadata.name}")
-echo "$POD_NAME"
-kubectl port-forward $POD_NAME 8080:8080
-```
-
-Test:
-
-```shell
-curl http://127.0.0.1:8080
-```
-
-Install Dev Environment using NodePort:
-
-```shell
-helm install go-api helm --values env/dev-values.yaml
-```
-
-```shell
-minikube ssh
-```
-
-inside minikube ssh;
-
-```shell
-curl http://10.0.2.15:30090
-curl http://127.0.0.1:30090
 ```
 
 Show pods:
@@ -123,26 +109,3 @@ kubectl describe service go-api-service
 kubectl get service
 ```
 
-Get the service URL from host:
-
-```shell
-minikube service go-api-service --url
-```
-
-# Uninstall Helm chart
-
-```shell
-helm uninstall go-api
-```
-
-## Remove image from minikube
-
-```shell
-minikube image rm docker.io/localhost/my-go-api-helm:1.0
-```
-
-## Remove image from podman
-
-```shell
-podman image rm my-go-api-helm:1.0
-```
