@@ -1,17 +1,4 @@
-Create
-
-```shell
-git clone https://github.com/tfasanga/learning-k8s.git
-cd learning-k8s
-mkdir minimal-go-manual
-cd minimal-go-manual
-go mod init fasanga/learn/k8s/manual
-```
-
-```shell
-git clone https://github.com/tfasanga/learning-k8s.git
-cd learning-k8s/minimal-go-manual
-```
+# Minikube
 
 Run minikube with socket_vmnet network:
 
@@ -22,7 +9,7 @@ brew tap homebrew/services
 HOMEBREW=$(which brew) && sudo ${HOMEBREW} services start socket_vmnet
 ```
 
-Minikube:
+If minikube was running before then stop & delete it:
 
 ```shell
 minikube stop
@@ -36,18 +23,30 @@ minikube start --network socket_vmnet
 minikube start --driver qemu --network socket_vmnet
 ```
 
-Kind:
+```shell
+kubectx minikube
+```
+
+# Kind
 
 ```shell
 brew install kind
 kind create cluster
+```
+
+```shell
 kubectx kind-kind
 ```
+
+# Build
 
 Build Docker image:
 
 ```shell
 podman build -t my-go-api-helm:1.0 .
+```
+```shell
+podman save my-go-api-helm:1.0 -o my-go-api-helm-image.tar
 ```
 
 Test run in Podman:
@@ -56,29 +55,31 @@ Test run in Podman:
 podman run --rm -p 8080:8080 --name my-go-api-helm my-go-api-helm:1.0 
 ```
 
-Load docker image to minikube:
-
-```shell
-podman save my-go-api-helm:1.0 -o my-go-api-helm-image.tar
-```
+# Load docker image to Minikube
 
 ```shell
 minikube image load my-go-api-helm-image.tar
 ```
 
+# Load docker image to Kind
+
 ```shell
 kind load image-archive my-go-api-helm-image.tar
 ```
 
-Install Helm chart:
+# Install in Kubernetes
 
 ```shell
 helm install go-api helm --values helm/values.yaml
 ```
 
+Logs:
+
 ```shell
 kubectl logs -l app=go-api-label -f
 ```
+
+Port forward:
 
 ```shell
 export POD_NAME=$(kubectl get pods -l "app=go-api-label" -o jsonpath="{.items[0].metadata.name}")
@@ -86,9 +87,13 @@ echo "$POD_NAME"
 kubectl port-forward $POD_NAME 8080:8080
 ```
 
+Test:
+
 ```shell
 curl http://127.0.0.1:8080
 ```
+
+Install Dev Environment using NodePort:
 
 ```shell
 helm install go-api helm --values env/dev-values.yaml
@@ -97,6 +102,7 @@ helm install go-api helm --values env/dev-values.yaml
 ```shell
 minikube ssh
 ```
+
 inside minikube ssh;
 
 ```shell
@@ -123,19 +129,19 @@ Get the service URL from host:
 minikube service go-api-service --url
 ```
 
-Uninstall Helm chart:
+# Uninstall Helm chart
 
 ```shell
 helm uninstall go-api
 ```
 
-Remove image from minikube:
+## Remove image from minikube
 
 ```shell
 minikube image rm docker.io/localhost/my-go-api-helm:1.0
 ```
 
-Remove image from podman:
+## Remove image from podman
 
 ```shell
 podman image rm my-go-api-helm:1.0

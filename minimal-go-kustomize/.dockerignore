@@ -1,0 +1,5 @@
+*.tar
+helm/
+Dockerfile
+*.md
+.*

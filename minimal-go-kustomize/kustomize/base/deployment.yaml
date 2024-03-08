@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-api-deployment
+  labels:
+    app.kubernetes.io/name: go-api-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-api-label
+  template:
+    metadata:
+      labels:
+        app: go-api-label
+    spec:
+      containers:
+        - name: go-api-container
+          image: "localhost/my-go-api-kustomize:1.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /app/content
+              name: go-api-content-file
+      volumes:
+        - name: go-api-content-file
+          configMap:
+            name: go-api-content-configmap
