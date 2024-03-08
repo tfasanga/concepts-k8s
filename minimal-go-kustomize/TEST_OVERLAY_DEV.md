@@ -54,7 +54,7 @@ podman image rm my-go-api-kustomize:1.0
 # Build Manifest
 
 ```shell
-kustomize build kustomize/overlay/dev > dev_manifest.yaml
+kustomize build kustomize/overlays/dev > dev_manifest.yaml
 ```
 
 # Minikube SSH
