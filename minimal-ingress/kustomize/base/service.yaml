@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-api-service
+spec:
+  selector:
+    app: go-api-label
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      targetPort: 8080
+      port: 9000

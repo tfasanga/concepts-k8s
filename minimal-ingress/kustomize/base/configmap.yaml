@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: go-api-content-configmap
+  namespace: default
+data:
+  content.txt: |
+    Hi! I got deployed in Kubernetes Base Environment using Kustomize
+    Multi-line Test
