@@ -6,3 +6,4 @@ metadata:
 data:
   content.txt: |
     Hi! I got deployed in Kubernetes Base Environment using Kustomize
+    Multi-line Test
