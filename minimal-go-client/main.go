@@ -3,8 +3,10 @@ package main
 import (
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"github.com/anthdm/hollywood/actor"
+	"github.com/spf13/viper"
 	"io"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,15 +14,19 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 )
 
 type programContext struct {
 	clientset *kubernetes.Clientset
+	config    *Config
 }
 
 func (pc *programContext) httpHandler(w http.ResponseWriter, r *http.Request) {
@@ -32,38 +38,92 @@ func (pc *programContext) httpHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, string(content))
 	}
 
-	err = printNumberOfPods(w, pc.clientset)
+	err = printNumberOfPods(w, pc.clientset, pc.config.namespaces)
 	if err != nil {
 		log.Println(err.Error())
 	}
 }
 
 func startListener(pc *programContext) error {
-	log.Println("Starting listener")
+	log.Println("Starting listener 2")
 	http.HandleFunc("/", pc.httpHandler)
 	return http.ListenAndServe(":8080", nil)
 }
 
+type Config struct {
+	namespaces []string
+}
+
+func NewConfig(v *viper.Viper) (cfg *Config, err error) {
+	cfg = &Config{
+		namespaces: v.GetStringSlice("namespaces"),
+	}
+
+	return cfg, nil
+}
+
 func main() {
-	// https://github.com/kubernetes/client-go/blob/v0.29.2/examples/in-cluster-client-configuration/main.go
-	// creates the in-cluster config
-	config, err := rest.InClusterConfig()
+	cfgFile := flag.String("config", "", "config file")
+	inCluster := flag.Bool("pod", false, "run in POD")
+	kubeconfig := flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	flag.Parse()
+
+	if *cfgFile != "" {
+		// Use config file from the flag.
+		fmt.Fprintf(os.Stdout, "Config file: %s", *cfgFile)
+		viper.SetConfigFile(*cfgFile)
+	} else {
+		fmt.Fprintf(os.Stdout, "No Config file specified\n")
+	}
+
+	// If a config file is found, read it in.
+	if *cfgFile != "" {
+		if err := viper.ReadInConfig(); err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to read config file: ", viper.ConfigFileUsed())
+		} else {
+			fmt.Fprintln(os.Stdout, "Config file read done: ", viper.ConfigFileUsed())
+		}
+	}
+
+	cfg, err := NewConfig(viper.GetViper())
 	if err != nil {
 		panic(err.Error())
 	}
 
-	clientSet, err := kubernetes.NewForConfig(config)
+	var restConfig *rest.Config
+
+	if *inCluster {
+		fmt.Println("Running in Kubernetes Pod")
+		// https://github.com/kubernetes/client-go/blob/v0.29.2/examples/in-cluster-client-configuration/main.go
+		// creates the in-cluster config
+		restConfig, err = rest.InClusterConfig()
+	} else {
+		if *kubeconfig == "" {
+			if home := homedir.HomeDir(); home != "" {
+				*kubeconfig = filepath.Join(home, ".kube", "config")
+			}
+		}
+
+		restConfig, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	}
+
 	if err != nil {
 		panic(err.Error())
 	}
 
-	pc := &programContext{clientset: clientSet}
-
-	err = printNumberOfPods(os.Stdout, pc.clientset)
+	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		panic(err.Error())
 	}
 
+	pc := &programContext{clientset: clientSet, config: cfg}
+
+	err = printNumberOfPods(os.Stdout, pc.clientset, pc.config.namespaces)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// create actor engine
 	engine, err := actor.NewEngine(actor.NewEngineConfig())
 	var pid *actor.PID = engine.Spawn(newKubeWatcherActor, "kube-watcher")
 	engine.Send(pid, "hello world!")
@@ -76,7 +136,9 @@ func main() {
 
 	c := Controller{engine, pid}
 
-	_, err = podInformer.Informer().AddEventHandler(
+	informer := podInformer.Informer()
+
+	_, err = informer.AddEventHandler(
 		&cache.ResourceEventHandlerFuncs{
 			AddFunc:    c.HandleAdd,
 			DeleteFunc: c.HandleDelete,
@@ -86,7 +148,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	// creating a unbuffered channel to synchronized the update
+	// creating a unbuffered channel to synchronize the update
 	stopChan := make(chan struct{})
 
 	// To stop the channel automatically at the end of our main functions
@@ -100,25 +162,26 @@ func main() {
 	}
 }
 
-func printNumberOfPods(w io.Writer, clientset *kubernetes.Clientset) error {
-	// get pods in all the namespaces by omitting namespace
-	// Or specify namespace to get pods in particular namespace
-	//pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
-	pods, err := clientset.CoreV1().Pods("default").List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return err
+func printNumberOfPods(w io.Writer, clientset *kubernetes.Clientset, namespaces []string) error {
+	if len(namespaces) == 0 {
+		// get pods in all the namespaces by omitting namespace
+		pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(w, "There are %d pods in all namespaces in the cluster\n", len(pods.Items))
+
+	} else {
+		for _, namespace := range namespaces {
+			pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(w, "There are %d pods in namespace %s in the cluster\n", len(pods.Items), namespace)
+		}
 	}
-	_, err = fmt.Fprintf(w, "There are %d pods in the cluster\n", len(pods.Items))
-	if err != nil {
-		return err
-	}
+
 	return nil
-}
-
-type podWatcher struct{}
-
-func newKubeWatcherActor() actor.Receiver {
-	return &podWatcher{}
 }
 
 type message struct{ data string }
@@ -134,6 +197,12 @@ type MsgDeleted struct {
 type MsgUpdated struct {
 	OldObj interface{}
 	NewObj interface{}
+}
+
+type podWatcher struct{}
+
+func newKubeWatcherActor() actor.Receiver {
+	return &podWatcher{}
 }
 
 func (h *podWatcher) Receive(ctx *actor.Context) {

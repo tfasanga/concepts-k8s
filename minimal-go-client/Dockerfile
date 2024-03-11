@@ -21,9 +21,10 @@ FROM alpine:3.14
 WORKDIR /app
 COPY --from=builder /app/main /app/
 COPY content /app/content
+COPY config /app/config
 
 # Expose the port the application listens on
 EXPOSE 8080
 
 # Set the entry point of the container
-CMD ["./main"]
+CMD ["./main", "-pod", "-config", "config/config.yaml"]

@@ -171,13 +171,13 @@ minikube image rm docker.io/localhost/my-go-api-goclient:1.0
 podman image rm my-go-api-goclient:1.0
 ```
 
-# Base
+# In Cluster
 
-[TEST_BASE.md](TEST_BASE.md)
+[TEST_IN_CLUSTER.md](TEST_IN_CLUSTER.md)
 
-# Dev Overlay
+# Out of Cluster (on host)
 
-[TEST_OVERLAY_DEV.md](TEST_OVERLAY_DEV.md)
+[TEST_OUT_OF_CLUSTER.md](TEST_OUT_OF_CLUSTER.md)
 
 # Notes
 

@@ -8,3 +8,7 @@ patches:
   - path: configmap-dev.yaml
   - path: service-dev.yaml
 
+images:
+  - name: my-go-api-goclient
+    newName: localhost/my-go-api-goclient
+    newTag: latest

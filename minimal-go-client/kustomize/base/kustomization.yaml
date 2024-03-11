@@ -6,6 +6,3 @@ resources:
   - configmap.yaml
   - service.yaml
 
-images:
-  - name: my-go-api-goclient
-    newName: localhost/my-go-api-goclient
