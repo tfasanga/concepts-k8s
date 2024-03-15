@@ -1,2 +1,3 @@
-# learning-k8s
-Learning Kubernetes
+# Concepts in k8s
+
+Exploring various Kubernetes concepts.
