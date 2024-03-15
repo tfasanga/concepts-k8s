@@ -14,7 +14,7 @@ COPY main.go .
 RUN go mod download
 
 # Build the Go application
-RUN go build -a -o main main.go
+RUN CGO_ENABLED=0 go build -a -o main main.go
 
 FROM alpine:3.14
 
