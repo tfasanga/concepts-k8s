@@ -1,3 +1,7 @@
+# Install Local Registry in Minikube
+
+see [REGISTRY.md](../REGISTRY.md)
+
 # Build
 
 ## Build and Load image in Kubernetes

@@ -51,9 +51,3 @@ minikube image rm docker.io/localhost/my-go-api-helm:1.0
 ```shell
 podman image rm my-go-api-helm:1.0
 ```
-
-# Build Manifest
-
-```shell
-kustomize build kustomize/base > manifest.yaml
-```
