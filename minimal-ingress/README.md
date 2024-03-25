@@ -1,29 +1,36 @@
-Uses: Podman, Minikube, Kubectl, Kustomize, Nginx Ingress Controller
+Uses: Podman, Minikube, Kubectl, Kustomize, Ingress Controller
 
-
-# Download Nginx
-
-```shell
-mkdir nginx
-wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/baremetal/deploy.yaml -O nginx/deploy.yaml
-```
-
-# Prerequisite: Install Nginx Ingress Controller in Kubernetes
+## Build and Load image in Kubernetes
 
 ```shell
-kubectl apply -f nginx/deploy.yaml
+podman build -t my-go-api-ingress:1.0 .
+podman save my-go-api-ingress:1.0 -o my-go-api-ingress-image.tar
+minikube image load my-go-api-ingress-image.tar
 ```
 
-# Base
-
-[TEST_BASE.md](TEST_BASE.md)
-
-# Dev Overlay
-
-[TEST_OVERLAY_DEV.md](TEST_OVERLAY_DEV.md)
-
-# Remove Nginx Ingress Controller from Kubernetes
+## Run port forwarder
 
 ```shell
-kubectl delete -f nginx/deploy.yaml
+export POD_NAME=$(kubectl get pods -l "app=go-api-label" -o jsonpath="{.items[0].metadata.name}")
+echo "$POD_NAME"
+kubectl port-forward $POD_NAME 8080:8080
 ```
+
+## Run test application
+
+```shell
+curl http://127.0.0.1:8080
+```
+
+# Istio
+
+Install Istio: [ISTIO.md](ISTIO.md)
+
+Write Gateway Resources: [ISTIO_GATEWAY.md](ISTIO_GATEWAY.md)
+
+Run: [TEST_ISTIO](TEST_ISTIO.md)
+
+# Nginx
+
+[TEST_NGINX.md](TEST_NGINX.md)
+

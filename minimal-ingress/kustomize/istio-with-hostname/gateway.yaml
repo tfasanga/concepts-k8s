@@ -1,0 +1,14 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: Gateway
+metadata:
+  name: minimal-gateway
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      hostname: "minimal.example.com"
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same

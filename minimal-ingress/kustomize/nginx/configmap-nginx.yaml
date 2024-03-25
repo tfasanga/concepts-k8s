@@ -4,5 +4,5 @@ metadata:
   name: go-api-content-configmap
 data:
   content.txt: |
-    Hi! I got deployed in Kubernetes Dev Environment using Kustomize
+    Hi! I got deployed in Kubernetes Nginx Environment using Kustomize
     Multi-line Test
