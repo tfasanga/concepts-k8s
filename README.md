@@ -14,7 +14,7 @@ Exploring various Kubernetes concepts.
 
 [minimal-kustomize](minimal-kustomize)
 
-## Ingress Controller using Nginx (using Kustomization)
+## Ingress Controller/Gateway using Nginx and Istio (using Kustomization)
 
 [minimal-ingress](minimal-ingress)
 

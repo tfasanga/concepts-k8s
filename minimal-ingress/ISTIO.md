@@ -46,23 +46,6 @@ helm status istiod -n istio-system
 kubectl get deployments -n istio-system --output wide
 ```
 
-## Install Ingress Gateway
-
-**This can be skipped.**
-
-```shell
-kubectl create namespace istio-ingress
-```
-
-```shell
-helm install istio-ingress istio/gateway -n istio-ingress --wait
-```
-
-```shell
-kubectl get all -n istio-ingress -l istio=ingress
-```
-
-
 # How to write Ingress Gateways resources
 
 Ingress Gateways
@@ -71,13 +54,6 @@ Ingress Gateways
 
 
 # Uninstalling using helm
-
-**This can be skipped.**
-
-```shell
-helm delete istio-ingress -n istio-ingress
-kubectl delete namespace istio-ingress
-```
 
 ```shell
 kubectl get all -n istio-system
