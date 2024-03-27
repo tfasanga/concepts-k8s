@@ -15,6 +15,9 @@ kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=444631b
 kubectl apply -f manifests/gateway/crd.yaml
 ```
 
+Gateway API with multiple namespaces:
+https://gateway-api.sigs.k8s.io/guides/multiple-ns/
+
 If you are going to use the Gateway API instructions,
 you can install Istio using the minimal profile because you will not need the istio-ingressgateway which is otherwise installed by default.
 
